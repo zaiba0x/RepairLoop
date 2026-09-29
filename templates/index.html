@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>RepairLoop | AI Repair Memory</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<header class="header">
+    <div class="logo">Repair<span>Loop</span></div>
+    <div class="tagline">AI Repair Memory Agent</div>
+</header>
+
+<main class="container">
+
+    <section class="hero">
+        <p class="eyebrow">SMART REPAIR ASSISTANT</p>
+        <h1>Every repair teaches us something.</h1>
+        <p class="hero-text">
+            Save repair experiences, recall previous solutions,
+            and learn from past outcomes.
+        </p>
+    </section>
+
+    <section class="stats">
+        <div class="stat-card">
+            <p>Total Repair Cases</p>
+            <h2 id="caseCount">{{ cases|length }}</h2>
+        </div>
+
+        <div class="stat-card">
+            <p>Memory System</p>
+            <h2 class="status">Hindsight</h2>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>Find a Previous Repair</h2>
+        <p class="muted">Search by device, problem, or solution.</p>
+
+        <div class="search-row">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Example: laptop overheating"
+            >
+            <button onclick="searchCases()">Search Memory</button>
+        </div>
+
+        <div id="searchMessage" class="message"></div>
+        <div id="searchResults" class="results"></div>
+        <div id="memoryResults" class="memory-results"></div>
+    </section>
+
+    <section class="panel">
+        <h2>Save a Repair Experience</h2>
+        <p class="muted">Record the problem, solution, and result.</p>
+
+        <form id="repairForm">
+
+            <label for="device">Device</label>
+            <input
+                id="device"
+                name="device"
+                placeholder="Example: Laptop"
+                required
+            >
+
+            <label for="problem">Problem</label>
+            <input
+                id="problem"
+                name="problem"
+                placeholder="Example: Overheating"
+                required
+            >
+
+            <label for="solution">Solution</label>
+            <textarea
+                id="solution"
+                name="solution"
+                placeholder="What fixed the problem?"
+                required
+            ></textarea>
+
+            <label for="outcome">Outcome</label>
+            <textarea
+                id="outcome"
+                name="outcome"
+                placeholder="What happened after the repair?"
+                required
+            ></textarea>
+
+            <button type="submit" class="save-button">
+                Save Repair Memory
+            </button>
+        </form>
+
+        <div id="saveMessage" class="message"></div>
+    </section>
+
+    <section class="panel">
+        <h2>Recent Repair Cases</h2>
+        <div id="recentCases" class="results">
+            {% for case in cases %}
+            <article class="case-card">
+                <span class="case-label">{{ case.device }}</span>
+                <h3>{{ case.problem }}</h3>
+                <p><strong>Solution:</strong> {{ case.solution }}</p>
+                <p><strong>Outcome:</strong> {{ case.outcome }}</p>
+            </article>
+            {% else %}
+            <p class="muted">No repair cases saved yet.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    RepairLoop · Learn from every repair.
+</footer>
+
+<script>
+    const form = document.getElementById("repairForm");
+
+    form.addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const data = {
+            device: document.getElementById("device").value,
+            problem: document.getElementById("problem").value,
+            solution: document.getElementById("solution").value,
+            outcome: document.getElementById("outcome").value
+        };
+
+        const message = document.getElementById("saveMessage");
+        message.textContent = "Saving repair case...";
+
+        try {
+            const response = await fetch("/add", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Could not save case.");
+            }
+
+            message.textContent = result.message +
+                (result.memory_saved
+                    ? " Hindsight memory stored."
+                    : " Saved locally; Hindsight memory was not confirmed.");
+
+            form.reset();
+            location.reload();
+
+        } catch (error) {
+            message.textContent = error.message;
+        }
+    });
+
+
+    async function searchCases() {
+        const query = document.getElementById("searchInput").value.trim();
+        const message = document.getElementById("searchMessage");
+        const resultsBox = document.getElementById("searchResults");
+        const memoryBox = document.getElementById("memoryResults");
+
+        resultsBox.innerHTML = "";
+        memoryBox.innerHTML = "";
+
+        if (!query) {
+            message.textContent = "Please enter a search term.";
+            return;
+        }
+
+        message.textContent = "Searching repair memories...";
+
+        try {
+            const response = await fetch("/search", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({query})
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Search failed.");
+            }
+
+            message.textContent = result.message;
+
+            result.matches.forEach(function(item) {
+                const card = document.createElement("article");
+                card.className = "case-card";
+
+                const title = document.createElement("h3");
+                title.textContent = item.problem;
+
+                const device = document.createElement("span");
+                device.className = "case-label";
+                device.textContent = item.device;
+
+                const solution = document.createElement("p");
+                solution.textContent = "Solution: " + item.solution;
+
+                const outcome = document.createElement("p");
+                outcome.textContent = "Outcome: " + item.outcome;
+
+                card.append(device, title, solution, outcome);
+                resultsBox.appendChild(card);
+            });
+
+            if (result.memory_results.length > 0) {
+                const heading = document.createElement("h3");
+                heading.textContent = "Hindsight Memory Recall";
+                memoryBox.appendChild(heading);
+
+                result.memory_results.forEach(function(text) {
+                    const card = document.createElement("article");
+                    card.className = "memory-card";
+                    card.textContent = text;
+                    memoryBox.appendChild(card);
+                });
+            }
+
+        } catch (error) {
+            message.textContent = error.message;
+        }
+    }
+</script>
+
+</body>
+</html>

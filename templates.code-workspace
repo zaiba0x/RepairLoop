@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"name": "templates",
+			"path": "../templates"
+		},
+		{
+			"name": "RepairLoop",
+			"path": "."
+		},
+		{
+			"name": "static",
+			"path": "../static"
+		}
+	],
+	"settings": {}
+}

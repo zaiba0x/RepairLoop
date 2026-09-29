@@ -1,0 +1,32 @@
+[
+    {
+        "device": "tab",
+        "problem": "screen damaged",
+        "solution": "installation of new screen guard",
+        "outcome": "new screen has been installed"
+    },
+    {
+        "device": "laptop",
+        "problem": "charging port",
+        "solution": "charging port replaced",
+        "outcome": "it is working"
+    },
+    {
+        "device": "Laptop",
+        "problem": "Overheating",
+        "solution": "Clean the cooling vents and check the fan",
+        "outcome": "Temperature improved"
+    },
+    {
+        "device": "Laptop",
+        "problem": "Battery draining quickly",
+        "solution": "Check battery usage and background applications",
+        "outcome": "Battery life improved"
+    },
+    {
+        "device": "Phone",
+        "problem": "Charging slowly",
+        "solution": "Inspect the charging cable and charging port",
+        "outcome": "Charging issue resolved"
+    }
+]
